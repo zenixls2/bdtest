@@ -1,4 +1,6 @@
 Flask==1.1.2
 flask_sqlalchemy
+flask-restx
+flask-mail
 pytest
 click

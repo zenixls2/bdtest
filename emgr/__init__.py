@@ -7,6 +7,12 @@ def create_app(config=None):
             SQLALCHEMY_DATABASE_URI='sqlite:///' +
                 os.path.join(app.instance_path, "bdtest.db"),
             SQLALCHEMY_TRACK_MODIFICATIONS=False,
+            MAIL_SERVER='smtp.googlemail.com',
+            MAIL_PORT=587,
+            MAIL_USE_TLS=True,
+            MAIL_USERNAME='zenixls2@gmail.com',
+            MAIL_DEFAULT_SENDER='zenixls2@gmail.com',
+            MAIL_PASSWORD='password', # fake one
     )
 
     try:
@@ -23,6 +29,7 @@ def create_app(config=None):
     db.init_app(app)
 
     from emgr import methods
+    methods.mail.init_app(app)
     app.register_blueprint(methods.bp)
 
     return app
