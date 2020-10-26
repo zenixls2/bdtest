@@ -1,12 +1,14 @@
-from emgr.model import db, Serializer, Event, User, Event2User
+# pylint: disable=R0201
+'''
+define api endpoints
+'''
+from datetime import datetime
+import os
 from flask import Blueprint, request, jsonify, send_from_directory
-from flask import g
 from flask_mail import Mail, Message
 from flask_restx import Api, Resource
-from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
-import os
-
+from emgr.model import db, Serializer, Event, User, Event2User
 
 DATE_FORMAT = "%Y/%m/%d-%H:%M:%S"
 
@@ -21,30 +23,39 @@ api = Api(bp, version="1.0",
 
 
 def handle_error(e):
+    '''jsonify error sqlalchemy message'''
     error = str(e.__dict__.get('orig') or 'error orig unknown')
     return jsonify({"status": "Error", "msg": error})
 
 def handle_error_str(e):
+    '''jsonify error str message'''
     return jsonify({"status": "Error", "msg": e})
 
 def handle_ok(content=None):
+    '''jsonify ok message'''
     content = content or {}
     return jsonify({"status": "Ok", **content})
 
 @api.route("/")
 class Index(Resource):
+    '''serve static file'''
     def get(self):
+        '''GET method'''
         return api.send_static_file("index.html")
 
 @api.route("/js/<path:path>")
 class SendJs(Resource):
+    '''serve static file'''
     def get(self, path):
+        '''GET method'''
         return send_from_directory("js", path)
 
 
 @api.route("/listall")
 class ListAll(Resource):
+    '''list all events'''
     def get(self):
+        '''GET method'''
         return jsonify(Serializer.serialize_list(Event.query.all()))
 
 @api.route("/add_event")
@@ -55,7 +66,9 @@ class ListAll(Resource):
     'end_time': format('End Time, in %s' % DATE_FORMAT)
 })
 class AddEvent(Resource):
+    '''create new event'''
     def get(self):
+        '''GET method'''
         name = request.args.get("name")
         location = request.args.get("location")
         start_time = request.args.get("start_time")
@@ -80,7 +93,9 @@ class AddEvent(Resource):
 @api.route("/add_user")
 @api.doc(params={'email': "Email address"})
 class AddUser(Resource):
+    '''create user'''
     def get(self):
+        '''GET method'''
         email = request.args.get("email")
         user = User(email=email)
         try:
@@ -99,7 +114,9 @@ class AddUser(Resource):
     'send_mail': 'bool, send notification mail on success, default to False'
 })
 class SignEvent(Resource):
+    '''sign for an event'''
     def get(self):
+        '''GET method'''
         uid = request.args.get("user_id")
         id = request.args.get("id")
         send_mail = request.args.get("send_mail") or False
@@ -130,7 +147,9 @@ class SignEvent(Resource):
     'id': 'id, Eent primary key',
 })
 class UnsignEvent(Resource):
+    '''unsign email from an event'''
     def get(self):
+        '''GET method'''
         email = request.args.get("email")
         id = request.args.get("id")
         if id is None or email is None:
@@ -155,7 +174,9 @@ class UnsignEvent(Resource):
     'user_id': 'By user_id (User primary key), optional (at least one param need to be exist)',
 })
 class GetUser(Resource):
+    '''get user info and all signed event ids'''
     def get(self):
+        '''GET method'''
         email = request.args.get("email")
         if email is not None:
             user = db.session.query(User).filter(
@@ -183,7 +204,9 @@ class GetUser(Resource):
 @api.route("/get_event")
 @api.doc(params={'id': 'by Event primary key'})
 class GetEvent(Resource):
+    '''get event info and registered emails'''
     def get(self):
+        '''GET method'''
         id = request.args.get("id")
         event = db.session.query(Event).filter(Event.id == id).first()
         if event is None:
@@ -193,6 +216,3 @@ class GetEvent(Resource):
             User.user_id == Event2User.user_id,
         )]
         return handle_ok({"event": event.serialize(), "users":emails})
-
-
-

@@ -1,7 +1,15 @@
-from flask import Flask
+'''
+entry point for the whole app
+'''
 import os
+from flask import Flask
+from emgr import methods
+from emgr.model import db
 
 def create_app(config=None):
+    '''
+    will be called by flask
+    '''
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
             SQLALCHEMY_DATABASE_URI='sqlite:///' +
@@ -24,11 +32,9 @@ def create_app(config=None):
         app.config.from_pyfile("config.py", silent=True)
     else:
         app.config.update(config)
-    
-    from emgr.model import db
+
     db.init_app(app)
 
-    from emgr import methods
     methods.mail.init_app(app)
     app.register_blueprint(methods.bp)
 
